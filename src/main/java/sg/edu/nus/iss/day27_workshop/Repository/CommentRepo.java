@@ -47,11 +47,11 @@ public class CommentRepo
         System.out.println(comment.getGid());
         template.insert(doc, C_REVIEW);
     }
-    @Transactional
+    
     public void updateComment(Comment comment, String id)
     {            
         ObjectId docId = new ObjectId(id);
-        Document edited = template.findById(docId, Document.class, C_REVIEW);
+        Document edited = template.findById(docId, Document.class, C_REVIEW);   
         Document oldEdit = edited.get("edited", Document.class);
         LinkedList<HashMap<String, String>> editList = new LinkedList<>();
         HashMap<String, String> list = new HashMap<>();
@@ -59,9 +59,9 @@ public class CommentRepo
         {
             System.out.println(oldEdit);
             //Add new edits to list
-            list.put(F_RATING, comment.getRating().toString());
-            list.put(F_C_TEXT, comment.getC_text());
-            list.put(F_DATE, java.time.LocalTime.now().toString());
+            list.put(F_RATING, edited.getString(F_RATING));
+            list.put(F_C_TEXT, edited.getString(F_C_TEXT));
+            list.put(F_DATE, edited.getString(F_DATE));
             editList.add(0, list);
             System.out.println("1");
             Query query = Query.query(Criteria.where("_id").is(docId));
@@ -74,25 +74,23 @@ public class CommentRepo
             System.out.println(updateResult.getModifiedCount());
         } else
         {   
-             System.out.println("not null");
+             System.out.println(oldEdit.toString());
             //Add old edits to list
-            for(int i=0; i<oldEdit.size(); i++)
-            {
-                HashMap<String, String> tt = (HashMap<String, String>) oldEdit.getList(i, HashMap<String, String>);
-                String oldComment = tt.get(F_RATING);
-                String oldRating = tt.get(F_RATING);
-                String oldPosted = tt.get(F_DATE);
+                 System.out.println("Not null");           
+                String oldComment = oldEdit.getString(F_C_TEXT);
+                String oldRating = oldEdit.getString(F_RATING);
+                String oldPosted = oldEdit.getString(F_DATE);
                 list.put(F_C_TEXT, oldComment);
                 list.put(F_RATING, oldRating);
                 list.put(F_DATE, oldPosted);
-                editList.add(i, list);
+                editList.add(0, list);
                 System.out.println(editList.toString());
-            }
+            
             //Add newest comment and rating to edit list
             list.put(F_RATING, comment.getRating().toString());
             list.put(F_C_TEXT, comment.getC_text());
             list.put(F_DATE, java.time.LocalTime.now().toString());
-            editList.add(oldEdit.size(), list);
+            editList.add(oldEdit.size()+1, list);
             Query query = Query.query(Criteria.where("_id").is(docId));
             Update update = new Update()
                             .set(F_RATING, comment.getRating())
